@@ -52,12 +52,21 @@ public class NexusMetadataBuilder extends Builder {
 
     private final String key;
     private final String value;
-
+    private final String groupId;
+    private final String artifactId;
+    private final String version;
+    private final String packaging;
+    
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public NexusMetadataBuilder(String key, String value) {
+    public NexusMetadataBuilder(String key, String value, String groupId, 
+    		String artifactId, String version, String packaging) {
         this.key = key;
         this.value = value;
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+        this.version = version;
+        this.packaging = packaging;
     }
 
     /**
@@ -68,6 +77,18 @@ public class NexusMetadataBuilder extends Builder {
 	}
 	public String getValue() {
 		return value;
+	}
+	public String getGroupId() {
+		return groupId;
+	}
+	public String getArtifactId() {
+		return artifactId;
+	}
+	public String getVersion() {
+		return version;
+	}
+	public String getPackaging() {
+		return packaging;
 	}
 
 	/**
@@ -82,7 +103,7 @@ public class NexusMetadataBuilder extends Builder {
 		listener.getLogger().println( "User:     " + user );
 		listener.getLogger().println( "Password: " + password );
 
-		if( validatePluginConfiguration(url, user, password) ) {
+		if( ! validatePluginConfiguration(url, user, password) ) {
 			listener.getLogger().println("Please configure Nexus Metadata Plugin");
 			return false;
 		}
@@ -109,8 +130,8 @@ public class NexusMetadataBuilder extends Builder {
 			return false;
 		}
 		listener.getLogger().println("Installation seems to be correct.\n");
-		
-		String artefact = "urn:maven/artifact#de.mb:rest-test:0.0.1::jar";
+
+		String artefact = "urn:maven/artifact#"+getGroupId()+":"+getArtifactId()+":"+getVersion()+"::"+getPackaging()+"";
 		listener.getLogger().println("GET metadata for artefact " + artefact);
 		String encodedString = new String( Base64.encode( artefact.getBytes() ) );
 		String metadataResult = service.path("service").path("local").path("index").path("custom_metadata").path("releases")
@@ -136,7 +157,6 @@ public class NexusMetadataBuilder extends Builder {
 		
 		if( url == null || user == null || password == null || 
 			url.isEmpty() || user.isEmpty() || password.isEmpty() ) {
-			
 			return false;
 		}
 		return true;

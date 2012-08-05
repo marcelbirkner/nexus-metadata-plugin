@@ -14,4 +14,16 @@
   <f:entry title="Value" field="value">
     <f:textbox />
   </f:entry>
+  <f:entry title="groupId" field="groupId">
+    <f:textbox />
+  </f:entry>
+    <f:entry title="artifactId" field="artifactId">
+    <f:textbox />
+  </f:entry>
+    <f:entry title="version" field="version">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="packaging" field="packaging">
+    <f:textbox />
+  </f:entry>
 </j:jelly>
