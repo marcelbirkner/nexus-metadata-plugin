@@ -6,6 +6,12 @@ It makes use of features from Nexus Professional.
 This source code is part of a tutorial that you can find here:<br>
 http://blog.codecentric.de/en/2012/08/tutorial-create-a-jenkins-plugin-to-integrate-jenkins-and-nexus-repository/
 
+<h3>Installation</h3>
+
+    git@github.com:marcelbirkner/nexus-metadata-plugin.git
+    cd nexus-metadata-plugin
+    mvn clean package
+
 <h3>Requirements</h3>
 
 - Jenkins CI Server
