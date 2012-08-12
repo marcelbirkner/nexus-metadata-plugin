@@ -24,5 +24,8 @@
       description="Add Nexus Password">
       <f:password />
     </f:entry>
+    <f:validateButton
+       title="${%Test Connection}" progress="${%Testing...}"
+       method="testConnection" with="nexusUrl,nexusUser,nexusPassword" />
   </f:section>
 </j:jelly>

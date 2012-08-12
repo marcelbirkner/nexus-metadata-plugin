@@ -114,19 +114,7 @@ public class NexusMetadataBuilder extends Builder {
 			return false;
 		}
 		
-    	// setup REST-Client
-    	ClientConfig config = new DefaultClientConfig();
-		Client client = Client.create(config);
-		client.addFilter( new HTTPBasicAuthFilter(user, Secret.toString( password ) ) ); 
-		WebResource service = client.resource( url );
-
-		listener.getLogger().println("Check that Nexus is running");
-		String nexusStatus = service.path("service").path("local").path("status").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
-		if( ! nexusStatus.contains( "200 OK") ) {
-			listener.getLogger().println("Please check if Nexus is running and plugin configuration is correct.");
-			listener.getLogger().println("Nexus returned: " + nexusStatus + "\n");
-			return false;
-		}
+    	WebResource service = getService(url, user, password);
 		
 		listener.getLogger().println("GET Nexus Version");
 		String nexusVersion = service.path("service").path("local").path("status").accept(MediaType.APPLICATION_JSON).get(String.class).toString();
@@ -169,6 +157,16 @@ public class NexusMetadataBuilder extends Builder {
 		return true;
     }
 
+	private WebResource getService(final String url, final String user,
+			final Secret password) {
+		// setup REST-Client
+    	ClientConfig config = new DefaultClientConfig();
+		Client client = Client.create(config);
+		client.addFilter( new HTTPBasicAuthFilter(user, Secret.toString( password ) ) ); 
+		WebResource service = client.resource( url );
+		return service;
+	}
+
 	private boolean validatePluginConfiguration(
 			final String url,
 			final String user, 
@@ -202,6 +200,28 @@ public class NexusMetadataBuilder extends Builder {
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl)super.getDescriptor();
+    }
+    
+    public FormValidation doTestConnection(
+    		@QueryParameter("nexusUrl") final String nexusUrl,
+    		@QueryParameter("nexusUser") final String nexusUser, 
+            @QueryParameter("nexusPassword") final String nexusPassword) throws IOException, ServletException {
+
+    	System.out.println("doTestConnection");
+    	try {
+        	WebResource service = getService(nexusUrl, nexusUser, Secret.fromString( nexusPassword ) );
+    		String nexusStatus = service.path("service").path("local").path("status").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
+        	System.out.println("doTestConnection " + nexusStatus);
+    		if( ! nexusStatus.contains( "200 OK") ) {
+    	    	System.out.println("Failed");
+    			return FormValidation.error("Failed. Please check the configuration.");
+    		}
+        	
+        	return FormValidation.ok("Success");
+        } catch (Exception e) {
+        	System.out.println("Exception " + e.getMessage() );
+            return FormValidation.error("Client error : " + e.getMessage());
+        }
     }
 
 	/**
