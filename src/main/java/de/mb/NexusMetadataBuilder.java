@@ -7,6 +7,7 @@ import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -98,12 +99,9 @@ public class NexusMetadataBuilder extends Builder {
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
     	final String url = getDescriptor().getNexusUrl();
     	final String user = getDescriptor().getNexusUser();
-    	final String password = getDescriptor().getNexusPassword();
-    	listener.getLogger().println( "Url:      " + url );
-		listener.getLogger().println( "User:     " + user );
-		listener.getLogger().println( "Password: " + password );
-
-		if( ! validatePluginConfiguration(url, user, password) ) {
+    	final Secret password = getDescriptor().getNexusPassword();
+    	
+		if( ! validatePluginConfiguration(url, user,  Secret.toString( password ) ) ) {
 			listener.getLogger().println("Please configure Nexus Metadata Plugin");
 			return false;
 		}
@@ -111,7 +109,7 @@ public class NexusMetadataBuilder extends Builder {
     	// setup REST-Client
     	ClientConfig config = new DefaultClientConfig();
 		Client client = Client.create(config);
-		client.addFilter( new HTTPBasicAuthFilter(user, password) ); 
+		client.addFilter( new HTTPBasicAuthFilter(user, Secret.toString( password ) ) ); 
 		WebResource service = client.resource( url );
 
 		listener.getLogger().println("Check that Nexus is running");
@@ -204,7 +202,7 @@ public class NexusMetadataBuilder extends Builder {
          */
         private String nexusUrl;
         private String nexusUser;
-        private String nexusPassword;
+        private Secret nexusPassword;
         
         /**
          * Performs on-the-fly validation of the form field 'key'.
@@ -249,7 +247,7 @@ public class NexusMetadataBuilder extends Builder {
             // set that to properties and call save().
             nexusUrl = formData.getString("nexusUrl");
             nexusUser = formData.getString("nexusUser");
-            nexusPassword = formData.getString("nexusPassword");
+            nexusPassword = Secret.fromString( formData.getString("nexusPassword") );
             
             // Can also use req.bindJSON(this, formData);
             // (easier when there are many fields; need set* methods for this, like setUseFrench)
@@ -263,7 +261,7 @@ public class NexusMetadataBuilder extends Builder {
         public String getNexusUser() {
             return nexusUser;
         }
-        public String getNexusPassword() {
+        public Secret getNexusPassword() {
             return nexusPassword;
         }
     }
