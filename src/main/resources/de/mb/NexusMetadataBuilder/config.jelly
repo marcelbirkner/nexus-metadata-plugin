@@ -14,6 +14,9 @@
   <f:entry title="Value" field="value">
     <f:textbox />
   </f:entry>
+  <f:entry title="namespace" field="namespace">
+    <f:textbox />
+  </f:entry>
   <f:entry title="groupId" field="groupId">
     <f:textbox />
   </f:entry>

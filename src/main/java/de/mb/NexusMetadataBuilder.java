@@ -1,4 +1,5 @@
 package de.mb;
+
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
@@ -24,6 +25,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.sonatype.nexus.index.rest.model.CustomMetadata;
 import com.sonatype.nexus.index.rest.model.CustomMetadataRequest;
+import com.sonatype.nexus.index.rest.model.CustomMetadataResponse;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -53,6 +55,7 @@ public class NexusMetadataBuilder extends Builder {
 
     private final String key;
     private final String value;
+    private final String namespace;
     private final String groupId;
     private final String artifactId;
     private final String version;
@@ -60,10 +63,11 @@ public class NexusMetadataBuilder extends Builder {
     
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public NexusMetadataBuilder(String key, String value, String groupId, 
+    public NexusMetadataBuilder(String key, String value, String namespace, String groupId, 
     		String artifactId, String version, String packaging) {
         this.key = key;
         this.value = value;
+        this.namespace = namespace;
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
@@ -78,6 +82,9 @@ public class NexusMetadataBuilder extends Builder {
 	}
 	public String getValue() {
 		return value;
+	}
+	public String getNamespace() {
+		return namespace;
 	}
 	public String getGroupId() {
 		return groupId;
@@ -129,15 +136,26 @@ public class NexusMetadataBuilder extends Builder {
 		}
 		listener.getLogger().println("Installation seems to be correct.\n");
 
-		String artefact = "urn:maven/artifact#"+getGroupId()+":"+getArtifactId()+":"+getVersion()+"::"+getPackaging()+"";
+		String artefact = getNamespace()+"#"+getGroupId()+":"+getArtifactId()+":"+getVersion()+"::"+getPackaging()+"";
 		listener.getLogger().println("GET metadata for artefact " + artefact);
 		String encodedString = new String( Base64.encode( artefact.getBytes() ) );
 		String metadataResult = service.path("service").path("local").path("index").path("custom_metadata").path("releases")
 				.path(encodedString).accept(MediaType.APPLICATION_JSON).get(String.class).toString();
 		listener.getLogger().println( metadataResult + "\n");
 
+		CustomMetadataResponse metadataRes = service.path("service").path("local").path("index").path("custom_metadata").path("releases")
+				.path(encodedString).accept(MediaType.APPLICATION_XML).get( CustomMetadataResponse.class );
+
+		List<CustomMetadata> metaList = metadataRes.getData();
+		CustomMetadataRequest customRequest = getCustomMetadataRequest( getNamespace(), getKey(), getValue() );
+		for (CustomMetadata customMetadata : metaList) {
+			listener.getLogger().println( customMetadata.getKey() );
+			if( ! customMetadata.getReadOnly() ) {
+				customRequest.getData().add( customMetadata );
+			}
+		}
+		
 		listener.getLogger().println("POST: add new metadata to artefact " + artefact);
-		CustomMetadataRequest customRequest = getCustomMetadataRequest( getKey(), getValue() );
 		service.path("service").path("local")
 			.path("index").path("custom_metadata").path("releases")
 			.path(encodedString).accept( MediaType.APPLICATION_JSON ).post( customRequest );
@@ -160,13 +178,12 @@ public class NexusMetadataBuilder extends Builder {
 		return true;
 	}
 
-	private static CustomMetadataRequest getCustomMetadataRequest(String key, String value) {
+	private static CustomMetadataRequest getCustomMetadataRequest(String namespace, String key, String value) {
 		CustomMetadataRequest request = new CustomMetadataRequest();
 		List<CustomMetadata> list = new ArrayList<CustomMetadata>();
 		CustomMetadata item = new CustomMetadata();
 		item.setKey( key );
-		item.setValue(  value );
-		item.setNamespace("");
+		item.setValue( value );
 		item.setReadOnly( false );
 		list.add(item);
 		request.setData( list );
