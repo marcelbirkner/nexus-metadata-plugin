@@ -104,11 +104,12 @@ public class NexusMetadataBuilder extends Builder {
 	 */
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    	
     	final String url = getDescriptor().getNexusUrl();
     	final String user = getDescriptor().getNexusUser();
     	final Secret password = getDescriptor().getNexusPassword();
     	
-		if( ! validatePluginConfiguration(url, user,  Secret.toString( password ) ) ) {
+		if( ! validatePluginConfiguration(url, user, Secret.toString( password ) ) ) {
 			listener.getLogger().println("Please configure Nexus Metadata Plugin");
 			return false;
 		}
@@ -121,11 +122,14 @@ public class NexusMetadataBuilder extends Builder {
 
 		listener.getLogger().println("Check that Nexus is running");
 		String nexusStatus = service.path("service").path("local").path("status").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
-		listener.getLogger().println(nexusStatus + "\n");
+		if( ! nexusStatus.contains( "200 OK") ) {
+			listener.getLogger().println("Please check if Nexus is running and plugin configuration is correct.");
+			listener.getLogger().println("Nexus returned: " + nexusStatus + "\n");
+			return false;
+		}
 		
 		listener.getLogger().println("GET Nexus Version");
 		String nexusVersion = service.path("service").path("local").path("status").accept(MediaType.APPLICATION_JSON).get(String.class).toString();
-		listener.getLogger().println(nexusVersion + "\n");
 		if( ! nexusVersion.contains( "nexus:metadata" ) ) {
 			listener.getLogger().println("Please install the metadata plugin.");
 			return false;
@@ -149,7 +153,6 @@ public class NexusMetadataBuilder extends Builder {
 		List<CustomMetadata> metaList = metadataRes.getData();
 		CustomMetadataRequest customRequest = getCustomMetadataRequest( getNamespace(), getKey(), getValue() );
 		for (CustomMetadata customMetadata : metaList) {
-			listener.getLogger().println( customMetadata.getKey() );
 			if( ! customMetadata.getReadOnly() ) {
 				customRequest.getData().add( customMetadata );
 			}
@@ -184,6 +187,7 @@ public class NexusMetadataBuilder extends Builder {
 		CustomMetadata item = new CustomMetadata();
 		item.setKey( key );
 		item.setValue( value );
+		item.setNamespace( namespace + "#");
 		item.setReadOnly( false );
 		list.add(item);
 		request.setData( list );
