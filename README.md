@@ -36,6 +36,6 @@ mvn install:install-file
 
 <h5>Updates</h5>
 
-(05/2013): The latest versions of Nexus do not have the nexus-custom-metadata-plugin Jar file any more. 
+(05/2013): The latest versions of Nexus do not have the nexus-custom-metadata-plugin Jar file any more. Please use Nexus Pro version 2.0.6 in case you want to try out this source code.
 
 
