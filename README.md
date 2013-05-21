@@ -20,19 +20,22 @@ http://blog.codecentric.de/en/2012/08/tutorial-create-a-jenkins-plugin-to-integr
 
 <h4>Maven Dependencies</h4>
 
-After unpacking Nexus Pro you should find the nexus-custom-metadata-plugin-client.jar file under the optional-plugins.
+After unpacking Nexus Pro you should find the *nexus-custom-metadata-plugin-2.0.6.jar* file under the optional-plugins.
 Take that JAR file and add it to your local Maven Repository or to your Nexus installation.
 
-- Directory: nexus-professional-trial-2.0.6-bundle\nexus-professional-trial-2.0.6\nexus\WEB-INF\optional-plugins\nexus-custom-metadata-plugin-2.0.6\nexus-custom-metadata-plugin-2.0.6\docs\
+- Directory: nexus-professional-trial-2.0.6-bundle\nexus-professional-trial-2.0.6\nexus\WEB-INF\optional-plugins\nexus-custom-metadata-plugin-2.0.6\nexus-custom-metadata-plugin-2.0.6\
 
 ```  
 mvn install:install-file 
-  -Dfile=nexus-custom-metadata-plugin-client.jar 
+  -Dfile=nexus-custom-metadata-plugin.jar 
   -DgroupId=org.sonatype.nexus 
   -DartifactId=nexus-custom-metadata-plugin-client 
   -Dversion=1.0
 ```
 
-    
 
-                       
+<h5>Updates</h5>
+
+(05/2013): The latest versions of Nexus do not have the nexus-custom-metadata-plugin Jar file any more. 
+
+
